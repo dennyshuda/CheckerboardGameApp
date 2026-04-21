@@ -1,0 +1,6 @@
+@CheckerboardGameApp_HostAddress = http://localhost:5015
+
+GET {{CheckerboardGameApp_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
