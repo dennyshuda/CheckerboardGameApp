@@ -1,27 +1,54 @@
+using CheckerboardGameApp.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CheckerboardGameApp.Controllers;
 
-[Route("v1/api/[controller]")]
+[Route("api/v1/[controller]")]
 [ApiController]
 public class GameController : ControllerBase
 {
+    private readonly IGame _game;
+
+    public GameController(IGame game)
+    {
+        _game = game;
+    }
+
     [HttpGet]
-    public IActionResult GetGame()
+    public IActionResult GetBoard()
     {
-        return Ok("oke");
+        var board = _game.GetBoard();
+        return Ok(board);
     }
 
-    [HttpGet("start")]
-    public IActionResult Start()
+    [HttpGet("state")]
+    public IActionResult GetGameState()
     {
-        return Ok("startooo gammuuu");
+        return Ok(new
+        {
+            Status = new
+            {
+                CurrentPlayer = _game.CurrentPlayerColor.ToString(),
+            },
+            Board = new
+            {
+                Rows = 8,
+                Cols = 8,
+                Squares = _game.GetBoard()
+            }
+        });
     }
 
-    [HttpPost("{id}")]
-    public IActionResult PostGame(int id)
+    [HttpGet("valid-moves/{x}/{y}")]
+    public IActionResult GetValidMoves(int x, int y)
     {
-        var res = new { Id = id, userName = "Checkers" };
-        return Ok(res);
+        return Ok(new { x, y });
     }
+
+    [HttpPost("move")]
+    public IActionResult PostGame([FromBody] MoveRequest move)
+    {
+        return Ok(move);
+    }
+
 }
