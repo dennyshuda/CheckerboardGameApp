@@ -1,12 +1,17 @@
 
 namespace CheckerboardGameApp.Models;
 
-public class Board
+public interface IBoard
+{
+    Square[,] Squares { get; set; }
+}
+
+public class Board : IBoard
 {
     public Square[,] Squares { get; set; }
 
-    public Board(Square[,] squares)
+    public Board()
     {
-        Squares = squares;
+        Squares = new Square[8, 8];
     }
 }
