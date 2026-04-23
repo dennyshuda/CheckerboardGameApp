@@ -45,7 +45,17 @@ public class GameController : ControllerBase
     public IActionResult GetValidMoves(int x, int y)
     {
         var valid = _game.GetValidMove(new Point(x, y));
-        return Ok(new { x, y, valid });
+
+        var response = new
+        {
+            from = new
+            {
+                x = x,
+                y = y
+            },
+            valid
+        };
+        return Ok(response);
     }
 
 

@@ -99,11 +99,11 @@ public class Game : IGame
         {
             var midCol = (from.X + to.X) / 2;
             var midRow = (from.Y + to.Y) / 2;
-            RemovePiece(new Point(midCol, midRow));
+            _board.Squares[midRow, midCol].Piece = null;
         }
 
         squareTo.Piece = piece;
-        RemovePiece(new Point(from.Y, from.X));
+        _board.Squares[from.Y, from.X].Piece = null;
 
         if (piece != null) CheckPromotion(piece, to);
 
@@ -121,6 +121,7 @@ public class Game : IGame
         var winner = GetWinner();
         if (winner != null)
         {
+            Status = GameStatus.GameOver;
             Console.WriteLine($"Permainan Selesai! Pemenangnya adalah {winner}");
         }
     }
