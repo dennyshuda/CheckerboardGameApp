@@ -1,9 +1,10 @@
+using CheckerboardGameApp.Models;
 using CheckerboardGameApp.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CheckerboardGameApp.Controllers;
 
-[Route("api/v1/[controller]")]
+[Route("api/v1/game")]
 [ApiController]
 public class GameController : ControllerBase
 {
@@ -17,8 +18,7 @@ public class GameController : ControllerBase
     [HttpGet]
     public IActionResult GetBoard()
     {
-        var board = _game.GetBoard();
-        return Ok(board);
+        return Ok(new { Message = "Welcome to CheckerboardGameApp" });
     }
 
     [HttpGet("state")]
@@ -29,6 +29,8 @@ public class GameController : ControllerBase
             Status = new
             {
                 CurrentPlayer = _game.CurrentPlayerColor.ToString(),
+                GameStatus = _game.Status,
+                Winner = _game.GetWinner()?.ToString(),
             },
             Board = new
             {
@@ -42,13 +44,45 @@ public class GameController : ControllerBase
     [HttpGet("valid-moves/{x}/{y}")]
     public IActionResult GetValidMoves(int x, int y)
     {
-        return Ok(new { x, y });
+        var valid = _game.GetValidMove(new Point(x, y));
+        return Ok(new { x, y, valid });
     }
+
 
     [HttpPost("move")]
-    public IActionResult PostGame([FromBody] MoveRequest move)
+    public IActionResult DoMove([FromBody] MoveRequest move)
     {
-        return Ok(move);
+        try
+        {
+            _game.DoMove(move.From, move.To);
+            return Ok(new
+            {
+                Message = "Gerakan berhasil.",
+                CurrentPlayer = _game.CurrentPlayerColor.ToString(),
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { ex.Message });
+        }
     }
 
+    [HttpPost("reset")]
+    public IActionResult Reset()
+    {
+        try
+        {
+            _game.ResetGame();
+
+            return Ok(new
+            {
+                Message = "Game telah di-reset ke posisi awal.",
+                CurrentPlayer = _game.CurrentPlayerColor.ToString()
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Message = "Gagal mereset game: " + ex.Message });
+        }
+    }
 }

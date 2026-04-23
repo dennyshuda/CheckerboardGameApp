@@ -13,6 +13,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddSingleton<IGame, Game>();
 
 builder.Services.AddControllers();
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -24,10 +25,12 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.UseSwaggerUi(options =>
 {
-    options.DocumentPath = "/openapi/v1.json";
+    options.DocumentPath = "/openapi/checkerboard.json";
 });
 }
 app.UseRouting();
+
+app.MapHealthChecks("/");
 
 app.MapControllers();
 
