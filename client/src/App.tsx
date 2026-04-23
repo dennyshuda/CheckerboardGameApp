@@ -1,24 +1,13 @@
-import { useEffect, useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import Checkerboard from "./components/checkerboard";
 
 function App() {
-    const [data, setData] = useState<any>();
-
-    useEffect(() => {
-        fetch("http://localhost:5015")
-            .then((response) => {
-                return response.json();
-            })
-            .then((jsonData) => {
-                console.log("Data diterima:", jsonData);
-                setData(jsonData);
-            })
-            .catch((error) => console.error("Error fetching data:", error));
-    }, []);
+    const queryClient = new QueryClient();
 
     return (
-        <>
-            <h1>Halo {data?.name}</h1>
-        </>
+        <QueryClientProvider client={queryClient}>
+            <Checkerboard />
+        </QueryClientProvider>
     );
 }
 
