@@ -95,4 +95,19 @@ public class GameController : ControllerBase
             return BadRequest(new { Message = "Gagal mereset game: " + ex.Message });
         }
     }
+
+    [HttpPost("setup-demo")]
+    public IActionResult SetupDemoScenario()
+    {
+        try
+        {
+            _game.InitializeDemoScenario();
+
+            return Ok(new { Message = "Scenario demo berhasil dimuat. Putih siap menang dalam 1 langkah!" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { Message = ex.Message });
+        }
+    }
 }

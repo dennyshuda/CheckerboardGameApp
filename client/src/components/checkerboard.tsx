@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import axios from "axios";
+import { useState } from "react";
 import type {
     GameStateResponse,
     Point,
@@ -7,7 +9,6 @@ import type {
 } from "../interfaces/game-state.response";
 import { getGameState, getValidMoves, movePiece } from "../lib/axios";
 import { cn } from "../utils/cn";
-import axios from "axios";
 
 const Checkerboard = () => {
     const queryClient = useQueryClient();
@@ -38,6 +39,16 @@ const Checkerboard = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["gameState"] });
             resetSelection();
+        },
+    });
+
+    const setupDemoMutation = useMutation({
+        mutationFn: () =>
+            axios.post("http://localhost:5015/api/v1/game/setup-demo"),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["gameState"] });
+            resetSelection();
+            console.log("Demo mode active!");
         },
     });
 
@@ -97,6 +108,13 @@ const Checkerboard = () => {
                 RESET
             </button>
 
+            <button
+                onClick={() => setupDemoMutation.mutate()}
+                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-xs"
+            >
+                DEMO SCENARIO
+            </button>
+
             {data.status.winner && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-500">
                     <div className="bg-slate-800 p-10 rounded-3xl border-2 border-amber-500 shadow-[0_0_50px_rgba(245,158,11,0.3)] text-center transform animate-in zoom-in-95 duration-300">
@@ -108,7 +126,6 @@ const Checkerboard = () => {
                             src="/oke.gif"
                             alt="Loading..."
                         />
-                        ;
                         <div className="my-6">
                             <p className="text-xl text-slate-300 mb-1">
                                 Pemenangnya adalah:

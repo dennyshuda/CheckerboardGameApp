@@ -12,6 +12,7 @@ public interface IGame
     void ResetGame();
     List<Point> GetValidMove(Point from);
     Color? GetWinner();
+    void InitializeDemoScenario();
 }
 
 public class Game : IGame
@@ -63,7 +64,7 @@ public class Game : IGame
         }
     }
 
-    private void InitializePiece()
+    public void InitializePiece()
     {
         for (var row = 0; row < 8; row++)
         {
@@ -80,6 +81,21 @@ public class Game : IGame
                 }
             }
         }
+    }
+
+    public void InitializeDemoScenario()
+    {
+        for (int y = 0; y < 8; y++)
+        {
+            for (int x = 0; x < 8; x++)
+            {
+                _board.Squares[y, x].Piece = null;
+            }
+        }
+
+        _board.Squares[2, 2].Piece = new Piece(Color.White, Role.Troop);
+
+        _board.Squares[1, 1].Piece = new Piece(Color.Black, Role.Troop);
     }
 
     public void DoMove(Point from, Point to)
