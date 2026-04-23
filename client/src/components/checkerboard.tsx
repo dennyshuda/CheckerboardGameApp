@@ -101,19 +101,20 @@ const Checkerboard = () => {
 
     return (
         <div className="flex flex-col items-center gap-8 p-10 bg-slate-900 min-h-screen text-slate-100">
-            <button
-                onClick={() => resetMutation.mutate()}
-                className="mt-4 px-10 py-4 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-amber-900/40"
-            >
-                RESET
-            </button>
-
-            <button
-                onClick={() => setupDemoMutation.mutate()}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-xs"
-            >
-                DEMO SCENARIO
-            </button>
+            <div className="space-x-2">
+                <button
+                    onClick={() => resetMutation.mutate()}
+                    className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-md text-xs"
+                >
+                    RESET
+                </button>
+                <button
+                    onClick={() => setupDemoMutation.mutate()}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-xs"
+                >
+                    DEMO SCENARIO
+                </button>
+            </div>
 
             {data.status.winner && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-500">
