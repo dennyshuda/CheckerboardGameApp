@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
     GameStateResponse,
     Point,
@@ -15,6 +15,7 @@ const Checkerboard = () => {
 
     const [selectedSquare, setSelectedSquare] = useState<Square | null>(null);
     const [highlightedMoves, setHighlightedMoves] = useState<Point[]>([]);
+    const victoryAudio = useRef<HTMLAudioElement | null>(null);
 
     const { data, isLoading, isError } = useQuery<GameStateResponse>({
         queryKey: ["gameState"],
@@ -92,6 +93,26 @@ const Checkerboard = () => {
     //         moveSound.play().catch(() => {});
     //     }
     // }, [mutation.isSuccess]);
+
+    useEffect(() => {
+        if (data?.status.winner) {
+            victoryAudio.current = new Audio("/windah.mp3");
+
+            victoryAudio.current.play().catch((error) => {
+                console.error(
+                    "Autoplay diblokir oleh browser, butuh interaksi user dulu:",
+                    error,
+                );
+            });
+        }
+
+        return () => {
+            if (victoryAudio.current) {
+                victoryAudio.current.pause();
+                victoryAudio.current = null;
+            }
+        };
+    }, [data?.status.winner]);
 
     if (isLoading)
         return <div className="text-white p-10">Loading Game...</div>;
