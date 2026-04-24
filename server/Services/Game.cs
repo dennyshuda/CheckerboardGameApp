@@ -5,8 +5,9 @@ namespace CheckerboardGameApp.Services;
 
 public interface IGame
 {
-    Color CurrentPlayerColor { get; set; }
-    GameStatus Status { get; set; }
+    Color CurrentPlayerColor { get; }
+    GameStatus Status { get; }
+
     List<Square> GetBoard();
     void DoMove(Point from, Point to);
     void ResetGame();
@@ -18,13 +19,17 @@ public interface IGame
 public class Game : IGame
 {
     private IBoard _board { get; set; }
-    private Color _currentPlayerColor;
+    public Color CurrentPlayerColor { get; set; }
     public GameStatus Status { get; set; }
 
-    public Color CurrentPlayerColor
+    public Game()
     {
-        get => _currentPlayerColor;
-        set => _currentPlayerColor = value;
+        _board = new Board();
+        CurrentPlayerColor = Color.White;
+        Status = GameStatus.Ongoing;
+        InitializeBoard();
+        InitializePiece();
+        // inisiasi 
     }
 
     public List<Square> GetBoard()
@@ -44,14 +49,6 @@ public class Game : IGame
     }
 
 
-    public Game()
-    {
-        _board = new Board();
-        _currentPlayerColor = Color.White;
-        Status = GameStatus.Ongoing;
-        InitializeBoard();
-        InitializePiece();
-    }
 
     private void InitializeBoard()
     {
@@ -138,7 +135,6 @@ public class Game : IGame
         if (winner != null)
         {
             Status = GameStatus.GameOver;
-            Console.WriteLine($"Permainan Selesai! Pemenangnya adalah {winner}");
         }
     }
 
@@ -167,6 +163,7 @@ public class Game : IGame
         return validMoves;
     }
 
+    // singlre resopen
     private void CheckAndAddMove(List<Point> list, int targetX, int targetY)
     {
         if (targetX >= 0 && targetX < 8 && targetY >= 0 && targetY < 8)
@@ -206,17 +203,18 @@ public class Game : IGame
     public void RemovePiece(Point point)
     {
         _board.Squares[point.Y, point.X].Piece = null;
+        // tru false
     }
 
     private void CheckPromotion(Piece piece, Point to)
     {
+
         if (piece?.Role != Role.Troop) return;
         if ((piece.Color != Color.White || to.Y != 0) &&
             (piece.Color != Color.Black || to.Y != 7)) return;
         piece.Role = Role.King;
     }
 
-    private bool IsInsideBoard(Point point) => point.X is >= 0 and < 8 && point.Y is >= 0 and < 8;
 
     private bool IsKing(Piece piece)
     {
@@ -226,7 +224,7 @@ public class Game : IGame
     public void ResetGame()
     {
         _board = new Board();
-        _currentPlayerColor = Color.White;
+        CurrentPlayerColor = Color.White;
         Status = GameStatus.Ongoing;
 
         InitializeBoard();
@@ -242,7 +240,6 @@ public class Game : IGame
 
         if (!blackCanMove) return Color.White;
 
-        // Belum ada pemenang
         return null;
     }
 
@@ -262,6 +259,4 @@ public class Game : IGame
         }
         return false;
     }
-
-
 }
