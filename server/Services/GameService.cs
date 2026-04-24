@@ -1,45 +1,31 @@
 using CheckerboardGameApp.Enums;
+using CheckerboardGameApp.Interfaces;
 using CheckerboardGameApp.Models;
 
 namespace CheckerboardGameApp.Services;
 
-public interface IGame
+public class GameService : IGameService
 {
-    Color CurrentPlayerColor { get; }
-    GameStatus Status { get; }
-
-    List<Square> GetBoard();
-    void DoMove(Point from, Point to);
-    void ResetGame();
-    List<Point> GetValidMove(Point from);
-    Color? GetWinner();
-    void InitializeDemoScenario();
-}
-
-public class Game : IGame
-{
-    private IBoard _board { get; set; }
+    public IBoard Board { get; private set; }
     public Color CurrentPlayerColor { get; set; }
     public GameStatus Status { get; set; }
+    public Color? Winner { get; set; }
 
-    public Game()
+    public GameService(IBoard board, Color currentPlayerColor, GameStatus status)
     {
-        _board = new Board();
-        CurrentPlayerColor = Color.White;
-        Status = GameStatus.Ongoing;
-        InitializeBoard();
-        InitializePiece();
-        // inisiasi 
+        Board = board;
+        CurrentPlayerColor = currentPlayerColor;
+        Status = status;
     }
 
-    public List<Square> GetBoard()
+    public List<Square> FlattenBoard()
     {
         var list = new List<Square>();
         for (int y = 0; y < 8; y++)
         {
             for (int x = 0; x < 8; x++)
             {
-                var square = _board.Squares[y, x];
+                var square = Board.Squares[y, x];
 
                 square.Point = new Point { X = x, Y = y };
                 list.Add(square);
@@ -49,56 +35,25 @@ public class Game : IGame
     }
 
 
-
-    private void InitializeBoard()
-    {
-        for (int row = 0; row < 8; row++)
-        {
-            for (int col = 0; col < 8; col++)
-            {
-                _board.Squares[row, col] = new Square(new Point(col, row), null);
-            }
-        }
-    }
-
-    public void InitializePiece()
-    {
-        for (var row = 0; row < 8; row++)
-        {
-            for (var col = 0; col < 8; col++)
-            {
-                if ((col + row) % 2 != 0)
-                {
-                    _board.Squares[row, col].Piece = row switch
-                    {
-                        < 3 => new Piece(Color.Black, Role.Troop),
-                        > 4 => new Piece(Color.White, Role.Troop),
-                        _ => _board.Squares[row, col].Piece
-                    };
-                }
-            }
-        }
-    }
-
     public void InitializeDemoScenario()
     {
         for (int y = 0; y < 8; y++)
         {
             for (int x = 0; x < 8; x++)
             {
-                _board.Squares[y, x].Piece = null;
+                Board.Squares[y, x].Piece = null;
             }
         }
 
-        _board.Squares[2, 2].Piece = new Piece(Color.White, Role.Troop);
+        Board.Squares[2, 2].Piece = new Piece(Color.White, Role.Troop);
 
-        _board.Squares[1, 1].Piece = new Piece(Color.Black, Role.Troop);
+        Board.Squares[1, 1].Piece = new Piece(Color.Black, Role.Troop);
     }
 
     public void DoMove(Point from, Point to)
     {
-        var squareFrom = _board.Squares[from.Y, from.X];
-        var squareTo = _board.Squares[to.Y, to.X];
+        var squareFrom = Board.Squares[from.Y, from.X];
+        var squareTo = Board.Squares[to.Y, to.X];
         var piece = squareFrom.Piece;
 
         var validMoves = GetValidMove(from);
@@ -112,11 +67,11 @@ public class Game : IGame
         {
             var midCol = (from.X + to.X) / 2;
             var midRow = (from.Y + to.Y) / 2;
-            _board.Squares[midRow, midCol].Piece = null;
+            Board.Squares[midRow, midCol].Piece = null;
         }
 
         squareTo.Piece = piece;
-        _board.Squares[from.Y, from.X].Piece = null;
+        Board.Squares[from.Y, from.X].Piece = null;
 
         if (piece != null) CheckPromotion(piece, to);
 
@@ -131,17 +86,13 @@ public class Game : IGame
 
         SwitchTurn();
 
-        var winner = GetWinner();
-        if (winner != null)
-        {
-            Status = GameStatus.GameOver;
-        }
+        CheckWinner();
     }
 
     public List<Point> GetValidMove(Point from)
     {
         var validMoves = new List<Point>();
-        var piece = _board.Squares[from.Y, from.X].Piece;
+        var piece = Board.Squares[from.Y, from.X].Piece;
 
         if (piece == null) return validMoves;
 
@@ -168,7 +119,7 @@ public class Game : IGame
     {
         if (targetX >= 0 && targetX < 8 && targetY >= 0 && targetY < 8)
         {
-            if (_board.Squares[targetY, targetX].Piece == null)
+            if (Board.Squares[targetY, targetX].Piece == null)
             {
                 list.Add(new Point(targetX, targetY));
             }
@@ -184,8 +135,8 @@ public class Game : IGame
 
         if (targetX >= 0 && targetX < 8 && targetY >= 0 && targetY < 8)
         {
-            var enemyPiece = _board.Squares[enemyY, enemyX].Piece;
-            var targetSquare = _board.Squares[targetY, targetX];
+            var enemyPiece = Board.Squares[enemyY, enemyX].Piece;
+            var targetSquare = Board.Squares[targetY, targetX];
 
             if (enemyPiece != null && enemyPiece.Color != myColor && targetSquare.Piece == null)
             {
@@ -202,7 +153,7 @@ public class Game : IGame
 
     public void RemovePiece(Point point)
     {
-        _board.Squares[point.Y, point.X].Piece = null;
+        Board.Squares[point.Y, point.X].Piece = null;
         // tru false
     }
 
@@ -221,26 +172,22 @@ public class Game : IGame
         return piece.Role == Role.King;
     }
 
-    public void ResetGame()
-    {
-        _board = new Board();
-        CurrentPlayerColor = Color.White;
-        Status = GameStatus.Ongoing;
-
-        InitializeBoard();
-        InitializePiece();
-    }
-
-    public Color? GetWinner()
+    public void CheckWinner()
     {
         bool whiteCanMove = CanPlayerMove(Color.White);
         bool blackCanMove = CanPlayerMove(Color.Black);
 
-        if (!whiteCanMove) return Color.Black;
+        if (!whiteCanMove)
+        {
+            Winner = Color.Black;
+            Status = GameStatus.GameOver;
+        }
 
-        if (!blackCanMove) return Color.White;
-
-        return null;
+        if (!blackCanMove)
+        {
+            Winner = Color.White;
+            Status = GameStatus.GameOver;
+        }
     }
 
     private bool CanPlayerMove(Color playerColor)
@@ -249,7 +196,7 @@ public class Game : IGame
         {
             for (int col = 0; col < 8; col++)
             {
-                var square = _board.Squares[row, col];
+                var square = Board.Squares[row, col];
                 if (square.Piece != null && square.Piece.Color == playerColor)
                 {
                     var moves = GetValidMove(new Point(col, row));
@@ -258,5 +205,12 @@ public class Game : IGame
             }
         }
         return false;
+    }
+
+    public void LoadState(IBoard board, Color currentPlayer, GameStatus status)
+    {
+        Board = board;
+        CurrentPlayerColor = currentPlayer;
+        Status = status;
     }
 }

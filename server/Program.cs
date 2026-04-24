@@ -1,4 +1,5 @@
-using CheckerboardGameApp.Services;
+using CheckerboardGameApp.Factories;
+using CheckerboardGameApp.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,7 +11,12 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowReactApp", policy => policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod());
 });
 
-builder.Services.AddSingleton<IGame, Game>();
+builder.Services.AddSingleton<GameFactory>();
+builder.Services.AddSingleton<IGameService>(sp =>
+{
+    var factory = sp.GetRequiredService<GameFactory>();
+    return factory.CreateGame();
+});
 
 builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
