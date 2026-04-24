@@ -1,10 +1,8 @@
 
+using CheckerboardGameApp.Interfaces;
+
 namespace CheckerboardGameApp.Models;
 
-public interface IBoard
-{
-    Square[,] Squares { get; set; }
-}
 
 public class Board : IBoard
 {
