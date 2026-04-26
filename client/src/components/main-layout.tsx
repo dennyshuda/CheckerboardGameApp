@@ -1,14 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import Checkerboard from "./components/checkerboard";
+import { Outlet } from "react-router";
 
-function App() {
+export default function MainLayout() {
     const queryClient = new QueryClient();
 
     return (
         <QueryClientProvider client={queryClient}>
-            <Checkerboard />
+            <Outlet />
         </QueryClientProvider>
     );
 }
-
-export default App;
