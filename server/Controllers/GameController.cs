@@ -55,7 +55,7 @@ public class GameController : ControllerBase
     [HttpGet("state")]
     public IActionResult GetGameState()
     {
-        if (string.IsNullOrEmpty(_gameService.WhitePlayerName) || string.IsNullOrEmpty(_gameService.BlackPlayerName))
+        if (_gameService.WhitePlayer == null || _gameService.BlackPlayer == null)
         {
             return BadRequest(new { Message = "Permainan belum dimulai. Silakan daftarkan pemain terlebih dahulu." });
         }
@@ -92,7 +92,7 @@ public class GameController : ControllerBase
                 GameStatus.Ongoing
             );
 
-            _gameService.InitializePlayers(String.Empty, String.Empty);
+            _gameService.ResetPlayers();
 
             return new MessageResponse
             {

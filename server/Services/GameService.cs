@@ -11,8 +11,8 @@ public class GameService : IGameService
     public Color CurrentPlayerColor { get; set; }
     public GameStatus Status { get; set; }
     public Color? Winner { get; set; }
-    public string WhitePlayerName { get; set; } = String.Empty;
-    public string BlackPlayerName { get; set; } = String.Empty;
+    public IPlayer? WhitePlayer { get; private set; }
+    public IPlayer? BlackPlayer { get; private set; }
 
     public GameService(IBoard board, Color currentPlayerColor, GameStatus status)
     {
@@ -30,8 +30,14 @@ public class GameService : IGameService
 
     public void InitializePlayers(string whiteName, string blackName)
     {
-        WhitePlayerName = whiteName;
-        BlackPlayerName = blackName;
+        WhitePlayer = new Player(whiteName);
+        BlackPlayer = new Player(blackName);
+    }
+
+    public void ResetPlayers()
+    {
+        WhitePlayer = null;
+        BlackPlayer = null;
     }
 
     public List<Square> FlattenBoard()

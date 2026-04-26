@@ -1,6 +1,8 @@
+using CheckerboardGameApp.Interfaces;
+
 namespace CheckerboardGameApp.Models;
 
-public class Player
+public class Player : IPlayer
 {
     public string Name { get; init; }
 

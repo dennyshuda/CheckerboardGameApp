@@ -10,12 +10,14 @@ public interface IGameService
     Color CurrentPlayerColor { get; }
     GameStatus Status { get; }
     Color? Winner { get; }
-    string WhitePlayerName { get; }
-    string BlackPlayerName { get; }
+
+    IPlayer? WhitePlayer { get; }
+    IPlayer? BlackPlayer { get; }
     List<Square> FlattenBoard();
     MakeMoveResponse MakeMove(Point from, Point to);
     List<Point> GetValidMove(Point from);
     void CheckWinner();
     void LoadState(IBoard board, Color currentPlayer, GameStatus status);
     void InitializePlayers(string whiteName, string blackName);
+    void ResetPlayers();
 }
