@@ -6,7 +6,8 @@ export const getGameState = () =>
     axios.get(`${API_URL}/state`).then((res) => res.data);
 
 export const getValidMoves = (x: number, y: number) =>
-    axios.get(`${API_URL}/valid-moves/${x}/${y}`).then((res) => res.data.valid);
+    axios.get(`${API_URL}/valid-moves/${x}/${y}`).then((res) => res.data);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const movePiece = (moveData: any) =>
     axios.post(`${API_URL}/move`, moveData).then((res) => res.data);
