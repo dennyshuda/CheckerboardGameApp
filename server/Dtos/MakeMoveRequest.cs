@@ -1,7 +1,8 @@
-
 using CheckerboardGameApp.Models;
 
-public class MoveRequest
+namespace CheckerboardGameApp.Dtos;
+
+public class MakeMoveRequest
 {
     public Point From { get; set; }
     public Point To { get; set; }

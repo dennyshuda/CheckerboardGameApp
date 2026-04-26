@@ -1,3 +1,4 @@
+using CheckerboardGameApp.Dtos;
 using CheckerboardGameApp.Enums;
 using CheckerboardGameApp.Models;
 
@@ -10,7 +11,7 @@ public interface IGameService
     GameStatus Status { get; }
     Color? Winner { get; }
     List<Square> FlattenBoard();
-    void DoMove(Point from, Point to);
+    MakeMoveResponse MakeMove(Point from, Point to);
     List<Point> GetValidMove(Point from);
     void CheckWinner();
     void LoadState(IBoard board, Color currentPlayer, GameStatus status);

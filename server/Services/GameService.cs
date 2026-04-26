@@ -1,3 +1,4 @@
+using CheckerboardGameApp.Dtos;
 using CheckerboardGameApp.Enums;
 using CheckerboardGameApp.Interfaces;
 using CheckerboardGameApp.Models;
@@ -18,6 +19,13 @@ public class GameService : IGameService
         Status = status;
     }
 
+    public void LoadState(IBoard board, Color currentPlayer, GameStatus status)
+    {
+        Board = board;
+        CurrentPlayerColor = currentPlayer;
+        Status = status;
+    }
+
     public List<Square> FlattenBoard()
     {
         var list = new List<Square>();
@@ -34,23 +42,7 @@ public class GameService : IGameService
         return list;
     }
 
-
-    public void InitializeDemoScenario()
-    {
-        for (int y = 0; y < 8; y++)
-        {
-            for (int x = 0; x < 8; x++)
-            {
-                Board.Squares[y, x].Piece = null;
-            }
-        }
-
-        Board.Squares[2, 2].Piece = new Piece(Color.White, Role.Troop);
-
-        Board.Squares[1, 1].Piece = new Piece(Color.Black, Role.Troop);
-    }
-
-    public void DoMove(Point from, Point to)
+    public MakeMoveResponse MakeMove(Point from, Point to)
     {
         var squareFrom = Board.Squares[from.Y, from.X];
         var squareTo = Board.Squares[to.Y, to.X];
@@ -60,7 +52,7 @@ public class GameService : IGameService
 
         if (!validMoves.Any(m => m.X == to.X && m.Y == to.Y))
         {
-            throw new Exception("Langkah tidak valid atau dilarang!");
+            return new MakeMoveResponse { IsSuccess = false, Message = "Langkah tidak valid!" };
         }
 
         if (Math.Abs(from.X - to.X) == 2)
@@ -73,7 +65,10 @@ public class GameService : IGameService
         squareTo.Piece = piece;
         Board.Squares[from.Y, from.X].Piece = null;
 
-        if (piece != null) CheckPromotion(piece, to);
+        if (piece != null)
+        {
+            CheckPromotion(piece, to);
+        }
 
         if (piece?.Color == Color.White && to.Y == 0)
         {
@@ -87,35 +82,49 @@ public class GameService : IGameService
         SwitchTurn();
 
         CheckWinner();
+
+        return new MakeMoveResponse
+        {
+            IsSuccess = true,
+            Message = "Gerakan berhasil",
+        };
     }
 
     public List<Point> GetValidMove(Point from)
     {
-        var validMoves = new List<Point>();
+        List<Point> validMoves = [];
         var piece = Board.Squares[from.Y, from.X].Piece;
 
         if (piece == null) return validMoves;
 
-        int directionRow = (piece.Color == Color.White) ? -1 : 1;
+        var rowDirection = new Dictionary<string, int> { { "Up", -1 }, { "Down", 1 } };
+        var colDirection = new Dictionary<string, int> { { "Left", -1 }, { "Right", 1 } };
 
-        int[] directionCol = [-1, 1];
+        int directionRow = (piece.Color == Color.White) ? rowDirection["Up"] : rowDirection["Down"];
+
+        int[] directionCol = [colDirection["Left"], colDirection["Right"]];
 
         foreach (var col in directionCol)
         {
-            CheckAndAddMove(validMoves, from.X + col, from.Y + directionRow);
+            IsValidNormalMove(validMoves, from.X + col, from.Y + directionRow);
 
-            if (IsKing(piece)) CheckAndAddMove(validMoves, from.X + col, from.Y - directionRow);
+            if (IsKing(piece))
+            {
+                IsValidNormalMove(validMoves, from.X + col, from.Y - directionRow);
+            }
 
-            CheckAndAddJump(validMoves, from, col, directionRow, piece.Color);
+            IsValidCaptureMove(validMoves, from, col, directionRow, piece.Color);
 
-            if (IsKing(piece)) CheckAndAddJump(validMoves, from, col, -directionRow, piece.Color);
+            if (IsKing(piece))
+            {
+                IsValidCaptureMove(validMoves, from, col, -directionRow, piece.Color);
+            }
         }
 
         return validMoves;
     }
 
-    // singlre resopen
-    private void CheckAndAddMove(List<Point> list, int targetX, int targetY)
+    private void IsValidNormalMove(List<Point> list, int targetX, int targetY)
     {
         if (targetX >= 0 && targetX < 8 && targetY >= 0 && targetY < 8)
         {
@@ -126,10 +135,11 @@ public class GameService : IGameService
         }
     }
 
-    private void CheckAndAddJump(List<Point> list, Point from, int dx, int dy, Color myColor)
+    private void IsValidCaptureMove(List<Point> list, Point from, int dx, int dy, Color myColor)
     {
         int enemyX = from.X + dx;
         int enemyY = from.Y + dy;
+
         int targetX = from.X + (dx * 2);
         int targetY = from.Y + (dy * 2);
 
@@ -163,9 +173,14 @@ public class GameService : IGameService
         if (piece?.Role != Role.Troop) return;
         if ((piece.Color != Color.White || to.Y != 0) &&
             (piece.Color != Color.Black || to.Y != 7)) return;
-        piece.Role = Role.King;
+
+        PromoteRole(piece);
     }
 
+    private void PromoteRole(Piece piece)
+    {
+        piece.Role = Role.King;
+    }
 
     private bool IsKing(Piece piece)
     {
@@ -205,12 +220,5 @@ public class GameService : IGameService
             }
         }
         return false;
-    }
-
-    public void LoadState(IBoard board, Color currentPlayer, GameStatus status)
-    {
-        Board = board;
-        CurrentPlayerColor = currentPlayer;
-        Status = status;
     }
 }

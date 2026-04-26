@@ -22,9 +22,9 @@ public class GameController : ControllerBase
     }
 
     [HttpGet("status")]
-    public ActionResult<StatusResponseDto> GetGameStatus()
+    public ActionResult<MessageResponse> GetGameStatus()
     {
-        return new StatusResponseDto
+        return new MessageResponse
         {
             Message = "Game is running"
         };
@@ -53,24 +53,22 @@ public class GameController : ControllerBase
 
     [HttpPost("reset")]
     [ProducesResponseType(StatusCodes.Status201Created)]
-    public IActionResult ResetGame()
+    public ActionResult<MessageResponse> ResetGame()
     {
         try
         {
-            // Jika kamu mau reset ke posisi awal standar:
             var newGame = _factory.CreateGame();
 
-            // 2. Timpa data di Singleton service kita dengan data dari factory
             _gameService.LoadState(
                 newGame.Board,
-                Color.White, // Reset ke player putih
+                Color.White,
                 GameStatus.Ongoing
             );
 
-            return Ok(new
+            return new MessageResponse
             {
-                Message = "Game telah di-reset ke posisi awal standar.",
-            });
+                Message = "Game telah di-reset ke posisi awal standar."
+            };
         }
         catch (Exception ex)
         {
@@ -80,38 +78,31 @@ public class GameController : ControllerBase
 
     [HttpPost("demo")]
     [ProducesResponseType(StatusCodes.Status201Created)]
-    public IActionResult LoadDemoGame()
+    public ActionResult<MessageResponse> LoadDemoGame()
     {
-        try
-        {
-            var demoBoard = _factory.CreateDemoGame();
 
-            _gameService.LoadState(demoBoard, Color.Black, GameStatus.Ongoing);
+        var demoBoard = _factory.CreateDemoGame();
 
-            return Ok(new { Message = "Papan demo berhasil dimuat!" });
-        }
-        catch (Exception ex)
+        _gameService.LoadState(demoBoard, Color.Black, GameStatus.Ongoing);
+
+        return new MessageResponse
         {
-            return BadRequest(new { Message = "Gagal mereset game: " + ex.Message });
-        }
+            Message = "Papan demo berhasil dimuat!"
+        };
+
     }
 
     [HttpPost("move")]
-    public IActionResult DoMove([FromBody] MoveRequest move)
+    public ActionResult MakeMove([FromBody] MakeMoveRequest move)
     {
-        try
+        var result = _gameService.MakeMove(move.From, move.To);
+
+        if (!result.IsSuccess)
         {
-            _gameService.DoMove(move.From, move.To);
-            return Ok(new
-            {
-                Message = "Gerakan berhasil.",
-                CurrentPlayer = _gameService.CurrentPlayerColor.ToString(),
-            });
+            return BadRequest(result);
         }
-        catch (Exception ex)
-        {
-            return BadRequest(new { ex.Message });
-        }
+
+        return Ok(result);
     }
 
     // [HttpGet("state")]
