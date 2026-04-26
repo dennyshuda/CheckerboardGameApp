@@ -38,18 +38,19 @@ public class GameService : IGameService
     {
         WhitePlayer = null;
         BlackPlayer = null;
+        Winner = null;
     }
 
     public List<Square> FlattenBoard()
     {
         var list = new List<Square>();
-        for (int y = 0; y < 8; y++)
+        for (int row = 0; row < 8; row++)
         {
-            for (int x = 0; x < 8; x++)
+            for (int col = 0; col < 8; col++)
             {
-                var square = Board.Squares[y, x];
+                var square = Board.Squares[row, col];
 
-                square.Point = new Point { X = x, Y = y };
+                square.Point = new Point { X = col, Y = row };
                 list.Add(square);
             }
         }
@@ -64,7 +65,7 @@ public class GameService : IGameService
 
         var validMoves = GetValidMove(from);
 
-        if (!validMoves.Any(m => m.X == to.X && m.Y == to.Y))
+        if (!validMoves.Any(move => move.To.X == to.X && move.To.Y == to.Y))
         {
             return new MakeMoveResponse { IsSuccess = false, Message = "Langkah tidak valid!" };
         }
@@ -79,6 +80,10 @@ public class GameService : IGameService
         squareTo.Piece = piece;
         Board.Squares[from.Y, from.X].Piece = null;
 
+        if (piece == null)
+        {
+            return new MakeMoveResponse { IsSuccess = false, Message = "Tidak ada bidak di posisi awal!" };
+        }
 
         bool isPromotion = CheckPromotion(piece, to);
 
@@ -98,76 +103,85 @@ public class GameService : IGameService
         };
     }
 
-    public List<Point> GetValidMove(Point from)
+    public List<MoveOption> GetValidMove(Point from)
     {
-        List<Point> validMoves = [];
+        List<MoveOption> validMoves = [];
         var piece = Board.Squares[from.Y, from.X].Piece;
 
-        if (piece == null) return validMoves;
+        if (piece == null || piece.Color != CurrentPlayerColor) return validMoves;
 
-        var rowDirection = new Dictionary<string, int> { { "Up", -1 }, { "Down", 1 } };
-        var colDirection = new Dictionary<string, int> { { "Left", -1 }, { "Right", 1 } };
+        var rowMovement = new Dictionary<string, int> {
+            { "Up", -1 },
+            { "Down", 1 }
+        };
+        var colMovement = new Dictionary<string, int> {
+            { "Left", -1 },
+            { "Right", 1 }
+        };
 
-        int directionRow = (piece.Color == Color.White) ? rowDirection["Up"] : rowDirection["Down"];
+        int rows = (piece.Color == Color.White) ? rowMovement["Up"] : rowMovement["Down"];
+        List<int> cols = [colMovement["Left"], colMovement["Right"]];
 
-        List<int> directionCol = [colDirection["Left"], colDirection["Right"]];
-
-        foreach (var col in directionCol)
+        foreach (var col in cols)
         {
-            IsValidNormalMove(validMoves, from.X + col, from.Y + directionRow);
+            IsValidNormalMove(validMoves, from.X + col, from.Y + rows);
 
             if (IsKing(piece))
             {
-                IsValidNormalMove(validMoves, from.X + col, from.Y - directionRow);
+                IsValidNormalMove(validMoves, from.X + col, from.Y - rows);
             }
 
-            IsValidCaptureMove(validMoves, from, col, directionRow, piece.Color);
+            IsValidCaptureMove(validMoves, from, col, rows, piece.Color);
 
             if (IsKing(piece))
             {
-                IsValidCaptureMove(validMoves, from, col, -directionRow, piece.Color);
+                IsValidCaptureMove(validMoves, from, col, -rows, piece.Color);
             }
         }
 
         return validMoves;
     }
 
-    private void IsValidNormalMove(List<Point> list, int targetX, int targetY)
+    private void IsValidNormalMove(List<MoveOption> list, int targetX, int targetY)
     {
-        if (targetX >= 0 && targetX < 8 && targetY >= 0 && targetY < 8)
+        if (IsInsideBoard(targetX, targetY))
         {
             if (Board.Squares[targetY, targetX].Piece == null)
             {
-                list.Add(new Point(targetX, targetY));
+                list.Add(new MoveOption { To = new Point(targetX, targetY), EnemyCaptured = null });
             }
         }
     }
 
-    private void IsValidCaptureMove(List<Point> list, Point from, int dx, int dy, Color myColor)
+    private void IsValidCaptureMove(List<MoveOption> list, Point from, int colDirection, int rowDirection, Color color)
     {
-        int enemyX = from.X + dx;
-        int enemyY = from.Y + dy;
+        int enemyX = from.X + colDirection;
+        int enemyY = from.Y + rowDirection;
+        int targetX = from.X + (colDirection * 2);
+        int targetY = from.Y + (rowDirection * 2);
 
-        int targetX = from.X + (dx * 2);
-        int targetY = from.Y + (dy * 2);
-
-        if (targetX >= 0 && targetX < 8 && targetY >= 0 && targetY < 8)
+        if (IsInsideBoard(targetX, targetY))
         {
             var enemyPiece = Board.Squares[enemyY, enemyX].Piece;
-            var targetSquare = Board.Squares[targetY, targetX];
+            var targetSquare = Board.Squares[targetY, targetX].Piece;
 
-            if (enemyPiece != null && enemyPiece.Color != myColor && targetSquare.Piece == null)
+            if (enemyPiece != null && enemyPiece.Color != color && targetSquare == null)
             {
-                list.Add(new Point(targetX, targetY));
+                list.Add(new MoveOption
+                {
+                    To = new Point(targetX, targetY),
+                    EnemyCaptured = new Point(enemyX, enemyY)
+                });
             }
         }
     }
+
+    private bool IsInsideBoard(int col, int row) => col >= 0 && col < 8 && row >= 0 && row < 8;
 
     private void SwitchTurn()
     {
         CurrentPlayerColor = (CurrentPlayerColor == Color.White) ? Color.Black : Color.White;
     }
-
 
     public void RemovePiece(Point point)
     {
@@ -198,18 +212,13 @@ public class GameService : IGameService
 
     public void CheckWinner()
     {
-        bool whiteCanMove = CanPlayerMove(Color.White);
-        bool blackCanMove = CanPlayerMove(Color.Black);
+        bool canCurrentPlayerMove = CanPlayerMove(CurrentPlayerColor);
 
-        if (!whiteCanMove)
-        {
-            Winner = Color.Black;
-            Status = GameStatus.GameOver;
-        }
+        Console.WriteLine($"Current Player ({CurrentPlayerColor}) can move: {canCurrentPlayerMove}");
 
-        if (!blackCanMove)
+        if (!canCurrentPlayerMove)
         {
-            Winner = Color.White;
+            Winner = (CurrentPlayerColor == Color.White) ? Color.Black : Color.White;
             Status = GameStatus.GameOver;
         }
     }
@@ -224,7 +233,10 @@ public class GameService : IGameService
                 if (square.Piece != null && square.Piece.Color == playerColor)
                 {
                     var moves = GetValidMove(new Point(col, row));
-                    if (moves.Count > 0) return true;
+                    if (moves.Count > 0)
+                    {
+                        return true;
+                    }
                 }
             }
         }

@@ -3,7 +3,6 @@ using CheckerboardGameApp.Enums;
 using CheckerboardGameApp.Factories;
 using CheckerboardGameApp.Interfaces;
 using CheckerboardGameApp.Models;
-using CheckerboardGameApp.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CheckerboardGameApp.Controllers;
@@ -26,7 +25,8 @@ public class GameController : ControllerBase
     {
         return new MessageResponse
         {
-            Message = "Game is running"
+            Message = "Game is running",
+            Status = "OK"
         };
     }
 
@@ -66,6 +66,8 @@ public class GameController : ControllerBase
             {
                 CurrentPlayer = _gameService.CurrentPlayerColor.ToString(),
                 GameStatus = _gameService.Status,
+                _gameService.WhitePlayer,
+                _gameService.BlackPlayer,
                 _gameService.Winner,
             },
             Board = new
@@ -84,6 +86,11 @@ public class GameController : ControllerBase
     {
         try
         {
+            if (_gameService.WhitePlayer == null || _gameService.BlackPlayer == null)
+            {
+                return BadRequest(new { Message = "Permainan belum dimulai. Silakan daftarkan pemain terlebih dahulu." });
+            }
+
             var newGame = _factory.CreateGame();
 
             _gameService.LoadState(
@@ -109,7 +116,10 @@ public class GameController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     public ActionResult<MessageResponse> LoadDemoGame()
     {
-
+        if (_gameService.WhitePlayer == null || _gameService.BlackPlayer == null)
+        {
+            return BadRequest(new { Message = "Permainan belum dimulai. Silakan daftarkan pemain terlebih dahulu." });
+        }
         var demoBoard = _factory.CreateDemoGame();
 
         _gameService.LoadState(demoBoard, Color.Black, GameStatus.Ongoing);
@@ -121,9 +131,27 @@ public class GameController : ControllerBase
 
     }
 
-    [HttpPost("move")]
-    public ActionResult MakeMove([FromBody] MakeMoveRequest move)
+    [HttpGet("valid-moves/{x}/{y}")]
+    public ActionResult<ValidMoveResponse> GetValidMoves(int x, int y)
     {
+        var fromPoint = new Point(x, y);
+        var options = _gameService.GetValidMove(fromPoint);
+
+        return new ValidMoveResponse
+        {
+            From = fromPoint,
+            Valid = options
+        };
+    }
+
+    [HttpPost("move")]
+    public ActionResult<MakeMoveResponse> MakeMove([FromBody] MakeMoveRequest move)
+    {
+        if (_gameService.WhitePlayer == null || _gameService.BlackPlayer == null)
+        {
+            return BadRequest(new { Message = "Permainan belum dimulai. Silakan daftarkan pemain terlebih dahulu." });
+        }
+
         var result = _gameService.MakeMove(move.From, move.To);
 
         if (!result.IsSuccess)
@@ -133,94 +161,4 @@ public class GameController : ControllerBase
 
         return Ok(result);
     }
-
-    // [HttpGet("state")]
-    // public IActionResult GetGameState()
-    // {
-    //     return Ok(new
-    //     {
-    //         Status = new
-    //         {
-    //             CurrentPlayer = _game.CurrentPlayerColor.ToString(),
-    //             GameStatus = _game.Status,
-    //             Winner = _game.GetWinner()?.ToString(),
-    //         },
-    //         Board = new
-    //         {
-    //             Rows = 8,
-    //             Cols = 8,
-    //             Squares = _game.GetBoard()
-    //         }
-    //     });
-    // }
-
-    // [HttpGet("valid-moves/{x}/{y}")]
-    // public IActionResult GetValidMoves(int x, int y)
-    // {
-    //     var valid = _game.GetValidMove(new Point(x, y));
-
-    //     var response = new
-    //     {
-    //         from = new
-    //         {
-    //             x = x,
-    //             y = y
-    //         },
-    //         valid
-    //     };
-    //     return Ok(response);
-    // }
-
-
-    // [HttpPost("move")]
-    // public IActionResult DoMove([FromBody] MoveRequest move)
-    // {
-    //     try
-    //     {
-    //         _game.DoMove(move.From, move.To);
-    //         return Ok(new
-    //         {
-    //             Message = "Gerakan berhasil.",
-    //             CurrentPlayer = _game.CurrentPlayerColor.ToString(),
-    //         });
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         return BadRequest(new { ex.Message });
-    //     }
-    // }
-
-    // [HttpPost("reset")]
-    // public IActionResult Reset()
-    // {
-    //     try
-    //     {
-    //         _game.ResetGame();
-
-    //         return Ok(new
-    //         {
-    //             Message = "Game telah di-reset ke posisi awal.",
-    //             CurrentPlayer = _game.CurrentPlayerColor.ToString()
-    //         });
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         return BadRequest(new { Message = "Gagal mereset game: " + ex.Message });
-    //     }
-    // }
-
-    // [HttpPost("setup-demo")]
-    // public IActionResult SetupDemoScenario()
-    // {
-    //     try
-    //     {
-    //         _game.InitializeDemoScenario();
-
-    //         return Ok(new { Message = "Scenario demo berhasil dimuat. Putih siap menang dalam 1 langkah!" });
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         return BadRequest(new { Message = ex.Message });
-    //     }
-    // }
 }

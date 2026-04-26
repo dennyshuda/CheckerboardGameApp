@@ -15,7 +15,7 @@ public interface IGameService
     IPlayer? BlackPlayer { get; }
     List<Square> FlattenBoard();
     MakeMoveResponse MakeMove(Point from, Point to);
-    List<Point> GetValidMove(Point from);
+    List<MoveOption> GetValidMove(Point from);
     void CheckWinner();
     void LoadState(IBoard board, Color currentPlayer, GameStatus status);
     void InitializePlayers(string whiteName, string blackName);
