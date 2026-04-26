@@ -11,6 +11,8 @@ public class GameService : IGameService
     public Color CurrentPlayerColor { get; set; }
     public GameStatus Status { get; set; }
     public Color? Winner { get; set; }
+    public string WhitePlayerName { get; set; } = String.Empty;
+    public string BlackPlayerName { get; set; } = String.Empty;
 
     public GameService(IBoard board, Color currentPlayerColor, GameStatus status)
     {
@@ -24,6 +26,12 @@ public class GameService : IGameService
         Board = board;
         CurrentPlayerColor = currentPlayer;
         Status = status;
+    }
+
+    public void InitializePlayers(string whiteName, string blackName)
+    {
+        WhitePlayerName = whiteName;
+        BlackPlayerName = blackName;
     }
 
     public List<Square> FlattenBoard()
@@ -65,18 +73,12 @@ public class GameService : IGameService
         squareTo.Piece = piece;
         Board.Squares[from.Y, from.X].Piece = null;
 
-        if (piece != null)
-        {
-            CheckPromotion(piece, to);
-        }
 
-        if (piece?.Color == Color.White && to.Y == 0)
+        bool isPromotion = CheckPromotion(piece, to);
+
+        if (isPromotion)
         {
-            piece.Role = Role.King;
-        }
-        else if (piece?.Color == Color.Black && to.Y == 7)
-        {
-            piece.Role = Role.King;
+            PromoteRole(piece);
         }
 
         SwitchTurn();
@@ -102,7 +104,7 @@ public class GameService : IGameService
 
         int directionRow = (piece.Color == Color.White) ? rowDirection["Up"] : rowDirection["Down"];
 
-        int[] directionCol = [colDirection["Left"], colDirection["Right"]];
+        List<int> directionCol = [colDirection["Left"], colDirection["Right"]];
 
         foreach (var col in directionCol)
         {
@@ -164,17 +166,18 @@ public class GameService : IGameService
     public void RemovePiece(Point point)
     {
         Board.Squares[point.Y, point.X].Piece = null;
-        // tru false
     }
 
-    private void CheckPromotion(Piece piece, Point to)
+    private bool CheckPromotion(Piece piece, Point to)
     {
 
-        if (piece?.Role != Role.Troop) return;
         if ((piece.Color != Color.White || to.Y != 0) &&
-            (piece.Color != Color.Black || to.Y != 7)) return;
+            (piece.Color != Color.Black || to.Y != 7))
+        {
+            return false;
+        }
 
-        PromoteRole(piece);
+        return true;
     }
 
     private void PromoteRole(Piece piece)

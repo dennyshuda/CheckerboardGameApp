@@ -30,9 +30,36 @@ public class GameController : ControllerBase
         };
     }
 
+    [HttpPost("start")]
+    public ActionResult<MessageResponse> StartGame([FromBody] GameStartRequest request)
+    {
+        if (string.IsNullOrEmpty(request.PlayerWhiteName) || string.IsNullOrEmpty(request.PlayerBlackName))
+        {
+            return BadRequest(new { Message = "Nama kedua pemain harus diisi!" });
+        }
+        if (request.PlayerWhiteName == request.PlayerBlackName)
+        {
+            return BadRequest(new { Message = "Nama kedua pemain tidak boleh sama!" });
+        }
+
+        _factory.CreateGame();
+
+        _gameService.InitializePlayers(request.PlayerWhiteName, request.PlayerBlackName);
+
+        return new MessageResponse
+        {
+            Message = $"Game dimulai! Putih: {request.PlayerWhiteName}, Hitam: {request.PlayerBlackName}"
+        };
+    }
+
     [HttpGet("state")]
     public IActionResult GetGameState()
     {
+        if (string.IsNullOrEmpty(_gameService.WhitePlayerName) || string.IsNullOrEmpty(_gameService.BlackPlayerName))
+        {
+            return BadRequest(new { Message = "Permainan belum dimulai. Silakan daftarkan pemain terlebih dahulu." });
+        }
+
         var response = new
         {
             Status = new
@@ -64,6 +91,8 @@ public class GameController : ControllerBase
                 Color.White,
                 GameStatus.Ongoing
             );
+
+            _gameService.InitializePlayers(String.Empty, String.Empty);
 
             return new MessageResponse
             {
