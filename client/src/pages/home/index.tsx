@@ -30,7 +30,7 @@ export default function HomePage() {
             });
         },
         onSuccess: () => {
-            navigate("/game");
+            navigate("/games");
         },
         onError: () => {
             alert(

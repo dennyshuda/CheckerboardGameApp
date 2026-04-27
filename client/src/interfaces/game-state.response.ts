@@ -37,3 +37,11 @@ export interface MoveRequest {
     from: Point;
     to: Point;
 }
+
+export type HighlightedMove = {
+    from: Point;
+    valid: {
+        to: Point;
+        enemyCaptured: Point | null;
+    }[];
+};

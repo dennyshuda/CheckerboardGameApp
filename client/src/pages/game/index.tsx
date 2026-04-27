@@ -277,7 +277,6 @@ export default function GamePage() {
                                                         👑
                                                     </span>
                                                 )}
-                                                {/* Decorative inner ring for classic feel */}
                                                 <div
                                                     className={cn(
                                                         "absolute inset-1 rounded-full border opacity-20",
