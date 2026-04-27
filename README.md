@@ -2,7 +2,8 @@
 
 CHECKERBOARD GAME APP is a modern web-based checkers game built with a Full-stack architecture using React for the user interface and .NET for the server-side game logic.
 
-![alt text](/client/public/preview.png)
+![alt text](/client/public/home.png)
+![alt text](/client/public/game.png)
 
 ## 🚀 Core Technologies
 
