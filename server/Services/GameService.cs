@@ -43,7 +43,7 @@ public class GameService : IGameService
 
     public List<Square> FlattenBoard()
     {
-        var list = new List<Square>();
+        List<Square> list = [];
         for (int row = 0; row < 8; row++)
         {
             for (int col = 0; col < 8; col++)
@@ -59,11 +59,11 @@ public class GameService : IGameService
 
     public MakeMoveResponse MakeMove(Point from, Point to)
     {
-        var squareFrom = Board.Squares[from.Y, from.X];
-        var squareTo = Board.Squares[to.Y, to.X];
-        var piece = squareFrom.Piece;
+        Square squareFrom = Board.Squares[from.Y, from.X];
+        Square squareTo = Board.Squares[to.Y, to.X];
+        Piece? piece = squareFrom.Piece;
 
-        var validMoves = GetValidMove(from);
+        List<MoveOption> validMoves = GetValidMove(from);
 
         if (!validMoves.Any(move => move.To.X == to.X && move.To.Y == to.Y))
         {
@@ -106,15 +106,17 @@ public class GameService : IGameService
     public List<MoveOption> GetValidMove(Point from)
     {
         List<MoveOption> validMoves = [];
-        var piece = Board.Squares[from.Y, from.X].Piece;
+        Piece? piece = Board.Squares[from.Y, from.X].Piece;
 
         if (piece == null || piece.Color != CurrentPlayerColor) return validMoves;
 
-        var rowMovement = new Dictionary<string, int> {
+        Dictionary<string, int> rowMovement = new()
+        {
             { "Up", -1 },
             { "Down", 1 }
         };
-        var colMovement = new Dictionary<string, int> {
+        Dictionary<string, int> colMovement = new()
+        {
             { "Left", -1 },
             { "Right", 1 }
         };
@@ -122,7 +124,7 @@ public class GameService : IGameService
         int rows = (piece.Color == Color.White) ? rowMovement["Up"] : rowMovement["Down"];
         List<int> cols = [colMovement["Left"], colMovement["Right"]];
 
-        foreach (var col in cols)
+        foreach (int col in cols)
         {
             IsValidNormalMove(validMoves, from.X + col, from.Y + rows);
 

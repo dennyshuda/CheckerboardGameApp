@@ -27,11 +27,11 @@ public class GameFactory
 
     public void InitializeDemoScenario(IBoard board)
     {
-        for (int y = 0; y < 8; y++)
+        for (int row = 0; row < 8; row++)
         {
-            for (int x = 0; x < 8; x++)
+            for (int col = 0; col < 8; col++)
             {
-                board.Squares[y, x].Piece = null;
+                board.Squares[row, col].Piece = null;
             }
         }
 
