@@ -32,8 +32,7 @@ public class GameService_IsGameServiceShould
     }
 
     [Test]
-
-    public void MakeMove_Input_ReturnTrue()
+    public void MakeMove_NormalMove_ReturnTrue()
     {
         Point from = new(x: 0, y: 5);
         Point to = new(x: 1, y: 4);
@@ -48,14 +47,83 @@ public class GameService_IsGameServiceShould
     }
 
     [Test]
-    public void MakeMove_Input_ReturnFalse()
+    public void MakeMove_KingNormalMoveBackward_ReturnTrue()
     {
         Point from = new(x: 0, y: 5);
         Point to = new(x: 1, y: 6);
 
+        Piece whitePiece = new(Color.White, Role.King);
+
+        _board.Squares[from.Y, from.X] = new Square(new Point(from.X, from.Y), whitePiece);
+
+        var response = _gameService.MakeMove(from, to);
+
+        Assert.That(response.IsSuccess, Is.True);
+    }
+
+    [Test]
+    public void MakeMove_NormalMoveInvalidDestination_ReturnFalse()
+    {
+        Point from = new(x: 0, y: 5);
+        Point to = new(x: 3, y: 4);
+
         Piece whitePiece = new(Color.White, Role.Troop);
 
         _board.Squares[from.Y, from.X] = new Square(new Point(from.X, from.Y), whitePiece);
+
+        var response = _gameService.MakeMove(from, to);
+
+        Assert.That(response.IsSuccess, Is.False);
+    }
+
+    [Test]
+    public void MakeMove_CaptureMove_ReturnTrue()
+    {
+        Point from = new(x: 0, y: 5);
+        Point to = new(x: 2, y: 3);
+        Point blackPiecePosition = new(x: 1, y: 4);
+
+        Piece whitePiece = new(Color.White, Role.Troop);
+        Piece blackPiece = new(Color.Black, Role.Troop);
+
+        _board.Squares[from.Y, from.X] = new Square(new Point(from.X, from.Y), whitePiece);
+        _board.Squares[blackPiecePosition.Y, blackPiecePosition.X] = new Square(new Point(blackPiecePosition.X, blackPiecePosition.Y), blackPiece);
+
+        var response = _gameService.MakeMove(from, to);
+
+        Assert.That(response.IsSuccess, Is.True);
+    }
+
+    [Test]
+    public void MakeMove_KingCaptureMoveBackward_ReturnTrue()
+    {
+        Point from = new(x: 0, y: 5);
+        Point to = new(x: 1, y: 6);
+        Point blackPiecePosition = new(x: 2, y: 7);
+
+        Piece whitePiece = new(Color.White, Role.King);
+        Piece blackPiece = new(Color.Black, Role.Troop);
+
+        _board.Squares[from.Y, from.X] = new Square(new Point(from.X, from.Y), whitePiece);
+        _board.Squares[blackPiecePosition.Y, blackPiecePosition.X] = new Square(new Point(blackPiecePosition.X, blackPiecePosition.Y), blackPiece);
+
+        var response = _gameService.MakeMove(from, to);
+
+        Assert.That(response.IsSuccess, Is.True);
+    }
+
+    [Test]
+    public void MakeMove_CaptureMoveHasNoEnemy_ReturnFalse()
+    {
+        Point from = new(x: 0, y: 5);
+        Point to = new(x: 2, y: 3);
+        Point blackPiecePosition = new(x: 3, y: 2);
+
+        Piece whitePiece = new(Color.White, Role.Troop);
+        Piece blackPiece = new(Color.Black, Role.Troop);
+
+        _board.Squares[from.Y, from.X] = new Square(new Point(from.X, from.Y), whitePiece);
+        _board.Squares[blackPiecePosition.Y, blackPiecePosition.X] = new Square(new Point(blackPiecePosition.X, blackPiecePosition.Y), blackPiece);
 
         var response = _gameService.MakeMove(from, to);
 
@@ -115,6 +183,18 @@ public class GameService_IsGameServiceShould
         result = _gameService.IsInsideBoard(3, 8);
         Assert.That(result, Is.False);
     }
+
+    [Test]
+    public void ResetPlayers_Input_ReturnNull()
+    {
+        _gameService.InitializePlayers("Alice", "Bob");
+        _gameService.ResetPlayers();
+
+        Assert.That(_gameService.BlackPlayer, Is.Null);
+        Assert.That(_gameService.Winner, Is.Null);
+        Assert.That(_gameService.WhitePlayer, Is.Null);
+    }
+
 
     [Test]
     public void IsKing_Input_ReturnFalse()
