@@ -216,8 +216,6 @@ public class GameService : IGameService
     {
         bool canCurrentPlayerMove = CanPlayerMove(CurrentPlayerColor);
 
-        Console.WriteLine($"Current Player ({CurrentPlayerColor}) can move: {canCurrentPlayerMove}");
-
         if (!canCurrentPlayerMove)
         {
             Winner = (CurrentPlayerColor == Color.White) ? Color.Black : Color.White;
