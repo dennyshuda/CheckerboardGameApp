@@ -14,6 +14,17 @@ public class GameService : IGameService
     public IPlayer? WhitePlayer { get; private set; }
     public IPlayer? BlackPlayer { get; private set; }
 
+    private readonly Dictionary<string, int> rowMovement = new()
+        {
+            { "Up", -1 },
+            { "Down", 1 }
+        };
+    private readonly Dictionary<string, int> colMovement = new()
+        {
+            { "Left", -1 },
+            { "Right", 1 }
+        };
+
     public GameService(IBoard board, Color currentPlayerColor, GameStatus status)
     {
         Board = board;
@@ -63,6 +74,11 @@ public class GameService : IGameService
         Square squareTo = Board.Squares[to.Y, to.X];
         Piece? piece = squareFrom.Piece;
 
+        if (piece == null)
+        {
+            return new MakeMoveResponse { IsSuccess = false, Message = "Tidak ada bidak di posisi awal!" };
+        }
+
         List<MoveOption> validMoves = GetValidMove(from);
 
         if (!validMoves.Any(move => move.To.X == to.X && move.To.Y == to.Y))
@@ -79,11 +95,6 @@ public class GameService : IGameService
 
         squareTo.Piece = piece;
         Board.Squares[from.Y, from.X].Piece = null;
-
-        if (piece == null)
-        {
-            return new MakeMoveResponse { IsSuccess = false, Message = "Tidak ada bidak di posisi awal!" };
-        }
 
         bool isPromotion = CheckPromotion(piece, to);
 
@@ -110,41 +121,30 @@ public class GameService : IGameService
 
         if (piece == null || piece.Color != CurrentPlayerColor) return validMoves;
 
-        Dictionary<string, int> rowMovement = new()
-        {
-            { "Up", -1 },
-            { "Down", 1 }
-        };
-        Dictionary<string, int> colMovement = new()
-        {
-            { "Left", -1 },
-            { "Right", 1 }
-        };
-
         int rows = (piece.Color == Color.White) ? rowMovement["Up"] : rowMovement["Down"];
         List<int> cols = [colMovement["Left"], colMovement["Right"]];
 
         foreach (int col in cols)
         {
-            IsValidNormalMove(validMoves, from.X + col, from.Y + rows);
+            AddValidNormalMove(validMoves, from.X + col, from.Y + rows);
 
             if (IsKing(piece))
             {
-                IsValidNormalMove(validMoves, from.X + col, from.Y - rows);
+                AddValidNormalMove(validMoves, from.X + col, from.Y - rows);
             }
 
-            IsValidCaptureMove(validMoves, from, col, rows, piece.Color);
+            AddValidCaptureMove(validMoves, from, col, rows, piece.Color);
 
             if (IsKing(piece))
             {
-                IsValidCaptureMove(validMoves, from, col, -rows, piece.Color);
+                AddValidCaptureMove(validMoves, from, col, -rows, piece.Color);
             }
         }
 
         return validMoves;
     }
 
-    private void IsValidNormalMove(List<MoveOption> list, int targetX, int targetY)
+    private void AddValidNormalMove(List<MoveOption> list, int targetX, int targetY)
     {
         if (IsInsideBoard(targetX, targetY))
         {
@@ -155,7 +155,7 @@ public class GameService : IGameService
         }
     }
 
-    private void IsValidCaptureMove(List<MoveOption> list, Point from, int colDirection, int rowDirection, Color color)
+    private void AddValidCaptureMove(List<MoveOption> list, Point from, int colDirection, int rowDirection, Color color)
     {
         int enemyX = from.X + colDirection;
         int enemyY = from.Y + rowDirection;
@@ -164,8 +164,8 @@ public class GameService : IGameService
 
         if (IsInsideBoard(targetX, targetY))
         {
-            var enemyPiece = Board.Squares[enemyY, enemyX].Piece;
-            var targetSquare = Board.Squares[targetY, targetX].Piece;
+            Piece? enemyPiece = Board.Squares[enemyY, enemyX].Piece;
+            Piece? targetSquare = Board.Squares[targetY, targetX].Piece;
 
             if (enemyPiece != null && enemyPiece.Color != color && targetSquare == null)
             {
@@ -178,7 +178,7 @@ public class GameService : IGameService
         }
     }
 
-    private bool IsInsideBoard(int col, int row) => col >= 0 && col < 8 && row >= 0 && row < 8;
+    public bool IsInsideBoard(int col, int row) => col >= 0 && col < 8 && row >= 0 && row < 8;
 
     private void SwitchTurn()
     {
@@ -190,7 +190,7 @@ public class GameService : IGameService
         Board.Squares[point.Y, point.X].Piece = null;
     }
 
-    private bool CheckPromotion(Piece piece, Point to)
+    public bool CheckPromotion(Piece piece, Point to)
     {
 
         if ((piece.Color != Color.White || to.Y != 0) &&
@@ -207,7 +207,7 @@ public class GameService : IGameService
         piece.Role = Role.King;
     }
 
-    private bool IsKing(Piece piece)
+    public bool IsKing(Piece piece)
     {
         return piece.Role == Role.King;
     }
@@ -225,16 +225,16 @@ public class GameService : IGameService
         }
     }
 
-    private bool CanPlayerMove(Color playerColor)
+    public bool CanPlayerMove(Color playerColor)
     {
         for (int row = 0; row < 8; row++)
         {
             for (int col = 0; col < 8; col++)
             {
-                var square = Board.Squares[row, col];
+                Square square = Board.Squares[row, col];
                 if (square.Piece != null && square.Piece.Color == playerColor)
                 {
-                    var moves = GetValidMove(new Point(col, row));
+                    List<MoveOption> moves = GetValidMove(new Point(col, row));
                     if (moves.Count > 0)
                     {
                         return true;

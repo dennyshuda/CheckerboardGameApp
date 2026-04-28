@@ -20,4 +20,8 @@ public interface IGameService
     void LoadState(IBoard board, Color currentPlayer, GameStatus status);
     void InitializePlayers(string whiteName, string blackName);
     void ResetPlayers();
+    bool IsKing(Piece piece);
+    bool IsInsideBoard(int col, int row);
+    bool CheckPromotion(Piece piece, Point to);
+    bool CanPlayerMove(Color playerColor);
 }

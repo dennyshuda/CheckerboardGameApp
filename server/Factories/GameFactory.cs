@@ -1,7 +1,6 @@
 using CheckerboardGameApp.Enums;
 using CheckerboardGameApp.Interfaces;
 using CheckerboardGameApp.Models;
-using CheckerboardGameApp.Services;
 
 namespace CheckerboardGameApp.Factories;
 
@@ -13,7 +12,7 @@ public class GameFactory
         InitializeBoard(board);
         InitializePiece(board);
 
-        return new GameService(board, Color.White, GameStatus.Ongoing);
+        return new Services.GameService(board, Color.White, GameStatus.Ongoing);
     }
 
     public IBoard CreateDemoGame()
