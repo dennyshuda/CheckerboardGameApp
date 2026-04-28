@@ -2,9 +2,19 @@
 using CheckerboardGameApp.Interfaces;
 using CheckerboardGameApp.Enums;
 using CheckerboardGameApp.Models;
+using Microsoft.Extensions.Logging;
+
+namespace GameService.Tests;
 
 public class GameService_IsGameServiceShould
 {
+    private readonly ILogger<CheckerboardGameApp.Services.GameService> _logger;
+
+    public GameService_IsGameServiceShould(ILogger<CheckerboardGameApp.Services.GameService> logger)
+    {
+        _logger = logger;
+    }
+
     private CheckerboardGameApp.Services.GameService _gameService;
     private IBoard _board = new Board();
 
@@ -20,8 +30,7 @@ public class GameService_IsGameServiceShould
             }
         }
 
-
-        _gameService = new CheckerboardGameApp.Services.GameService(_board, Color.White, GameStatus.Ongoing);
+        _gameService = new CheckerboardGameApp.Services.GameService(_board, Color.White, GameStatus.Ongoing, logger: _logger);
     }
 
     [Test]

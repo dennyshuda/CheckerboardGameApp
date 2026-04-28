@@ -1,5 +1,8 @@
 using CheckerboardGameApp.Factories;
 using CheckerboardGameApp.Interfaces;
+using Serilog;
+using Serilog.Events;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +20,15 @@ builder.Services.AddSingleton<IGameService>(sp =>
     var factory = sp.GetRequiredService<GameFactory>();
     return factory.CreateGame();
 });
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("System", LogEventLevel.Warning)
+    .WriteTo.Console()
+    .WriteTo.File("logs/game-log-.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
@@ -34,6 +46,8 @@ if (app.Environment.IsDevelopment())
     options.DocumentPath = "/openapi/v1.json";
 });
 }
+
+app.UseSerilogRequestLogging();
 app.UseRouting();
 
 app.MapHealthChecks("/");

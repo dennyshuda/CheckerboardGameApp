@@ -2,11 +2,13 @@ using CheckerboardGameApp.Dtos;
 using CheckerboardGameApp.Enums;
 using CheckerboardGameApp.Interfaces;
 using CheckerboardGameApp.Models;
+using Microsoft.Extensions.Logging;
 
 namespace CheckerboardGameApp.Services;
 
 public class GameService : IGameService
 {
+    private readonly ILogger<GameService> _logger;
     public IBoard Board { get; private set; }
     public Color CurrentPlayerColor { get; set; }
     public GameStatus Status { get; set; }
@@ -25,11 +27,12 @@ public class GameService : IGameService
             { "Right", 1 }
         };
 
-    public GameService(IBoard board, Color currentPlayerColor, GameStatus status)
+    public GameService(IBoard board, Color currentPlayerColor, GameStatus status, ILogger<GameService> logger)
     {
         Board = board;
         CurrentPlayerColor = currentPlayerColor;
         Status = status;
+        _logger = logger;
     }
 
     public void LoadState(IBoard board, Color currentPlayer, GameStatus status)
@@ -70,6 +73,8 @@ public class GameService : IGameService
 
     public MakeMoveResponse MakeMove(Point from, Point to)
     {
+        _logger.LogInformation($"Player mencoba gerak: {from} -> {to}");
+
         Square squareFrom = Board.Squares[from.Y, from.X];
         Square squareTo = Board.Squares[to.Y, to.X];
         Piece? piece = squareFrom.Piece;
@@ -185,10 +190,6 @@ public class GameService : IGameService
         CurrentPlayerColor = (CurrentPlayerColor == Color.White) ? Color.Black : Color.White;
     }
 
-    public void RemovePiece(Point point)
-    {
-        Board.Squares[point.Y, point.X].Piece = null;
-    }
 
     public bool CheckPromotion(Piece piece, Point to)
     {

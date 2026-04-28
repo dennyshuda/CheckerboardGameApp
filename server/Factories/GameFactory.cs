@@ -6,13 +6,19 @@ namespace CheckerboardGameApp.Factories;
 
 public class GameFactory
 {
+    private readonly ILogger<Services.GameService> _logger;
+    public GameFactory(ILogger<Services.GameService> logger)
+    {
+        _logger = logger;
+    }
+
     public IGameService CreateGame()
     {
         IBoard board = new Board();
         InitializeBoard(board);
         InitializePiece(board);
 
-        return new Services.GameService(board, Color.White, GameStatus.Ongoing);
+        return new CheckerboardGameApp.Services.GameService(board, Color.White, GameStatus.Ongoing, logger: _logger);
     }
 
     public IBoard CreateDemoGame()
