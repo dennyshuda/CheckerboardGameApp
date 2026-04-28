@@ -91,7 +91,7 @@ public class GameController : ControllerBase
                 return BadRequest(new { Message = "Permainan belum dimulai. Silakan daftarkan pemain terlebih dahulu." });
             }
 
-            var newGame = _factory.CreateGame();
+            IGameService newGame = _factory.CreateGame();
 
             _gameService.LoadState(
                 newGame.Board,
@@ -120,7 +120,8 @@ public class GameController : ControllerBase
         {
             return BadRequest(new { Message = "Permainan belum dimulai. Silakan daftarkan pemain terlebih dahulu." });
         }
-        var demoBoard = _factory.CreateDemoGame();
+
+        IBoard demoBoard = _factory.CreateDemoGame();
 
         _gameService.LoadState(demoBoard, Color.Black, GameStatus.Ongoing);
 
@@ -134,8 +135,8 @@ public class GameController : ControllerBase
     [HttpGet("valid-moves/{x}/{y}")]
     public ActionResult<ValidMoveResponse> GetValidMoves(int x, int y)
     {
-        var fromPoint = new Point(x, y);
-        var options = _gameService.GetValidMove(fromPoint);
+        Point fromPoint = new Point(x, y);
+        List<MoveOption> options = _gameService.GetValidMove(fromPoint);
 
         return new ValidMoveResponse
         {
@@ -152,7 +153,7 @@ public class GameController : ControllerBase
             return BadRequest(new { Message = "Permainan belum dimulai. Silakan daftarkan pemain terlebih dahulu." });
         }
 
-        var result = _gameService.MakeMove(move.From, move.To);
+        GameResponse<MoveOption> result = _gameService.MakeMove(move.From, move.To);
 
         if (!result.IsSuccess)
         {

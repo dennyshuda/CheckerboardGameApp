@@ -2,7 +2,6 @@ using CheckerboardGameApp.Dtos;
 using CheckerboardGameApp.Enums;
 using CheckerboardGameApp.Interfaces;
 using CheckerboardGameApp.Models;
-using Microsoft.Extensions.Logging;
 
 namespace CheckerboardGameApp.Services;
 
@@ -62,7 +61,7 @@ public class GameService : IGameService
         {
             for (int col = 0; col < 8; col++)
             {
-                var square = Board.Squares[row, col];
+                Square square = Board.Squares[row, col];
 
                 square.Point = new Point { X = col, Y = row };
                 list.Add(square);
@@ -71,7 +70,7 @@ public class GameService : IGameService
         return list;
     }
 
-    public MakeMoveResponse MakeMove(Point from, Point to)
+    public GameResponse<MoveOption> MakeMove(Point from, Point to)
     {
         _logger.LogInformation($"Player mencoba gerak: {from} -> {to}");
 
@@ -81,20 +80,20 @@ public class GameService : IGameService
 
         if (piece == null)
         {
-            return new MakeMoveResponse { IsSuccess = false, Message = "Tidak ada bidak di posisi awal!" };
+            return GameResponse<MoveOption>.Failure("Square asal tidak memiliki bidak!");
         }
 
         List<MoveOption> validMoves = GetValidMove(from);
 
         if (!validMoves.Any(move => move.To.X == to.X && move.To.Y == to.Y))
         {
-            return new MakeMoveResponse { IsSuccess = false, Message = "Langkah tidak valid!" };
+            return GameResponse<MoveOption>.Failure("Gerakan tidak valid!");
         }
 
         if (Math.Abs(from.X - to.X) == 2)
         {
-            var midCol = (from.X + to.X) / 2;
-            var midRow = (from.Y + to.Y) / 2;
+            int midCol = (from.X + to.X) / 2;
+            int midRow = (from.Y + to.Y) / 2;
             Board.Squares[midRow, midCol].Piece = null;
         }
 
@@ -112,11 +111,7 @@ public class GameService : IGameService
 
         CheckWinner();
 
-        return new MakeMoveResponse
-        {
-            IsSuccess = true,
-            Message = "Gerakan berhasil",
-        };
+        return GameResponse<MoveOption>.Success(new MoveOption { To = to, EnemyCaptured = validMoves.FirstOrDefault(m => m.To.X == to.X && m.To.Y == to.Y)?.EnemyCaptured }, "Gerakan berhasil!");
     }
 
     public List<MoveOption> GetValidMove(Point from)

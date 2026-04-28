@@ -10,11 +10,10 @@ public interface IGameService
     Color CurrentPlayerColor { get; }
     GameStatus Status { get; }
     Color? Winner { get; }
-
     IPlayer? WhitePlayer { get; }
     IPlayer? BlackPlayer { get; }
     List<Square> FlattenBoard();
-    MakeMoveResponse MakeMove(Point from, Point to);
+    GameResponse<MoveOption> MakeMove(Point from, Point to);
     List<MoveOption> GetValidMove(Point from);
     void CheckWinner();
     void LoadState(IBoard board, Color currentPlayer, GameStatus status);
