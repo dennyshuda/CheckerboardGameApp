@@ -1,4 +1,3 @@
-
 using CheckerboardGameApp.Interfaces;
 using CheckerboardGameApp.Enums;
 using CheckerboardGameApp.Models;
@@ -7,7 +6,8 @@ using Moq;
 
 namespace GameService.Tests;
 
-public class GameService_IsGameServiceShould
+[TestFixture]
+public class GameServiceTests
 {
     private Mock<ILogger<CheckerboardGameApp.Services.GameService>> _loggerMock;
     private CheckerboardGameApp.Services.GameService _gameService;
@@ -27,6 +27,14 @@ public class GameService_IsGameServiceShould
         }
 
         _gameService = new CheckerboardGameApp.Services.GameService(_board, Color.White, GameStatus.Ongoing, logger: _loggerMock.Object);
+    }
+
+    [Test]
+    public void FlattenBoard_ShouldReturnExactly64Squares()
+    {
+        List<Square> result = _gameService.FlattenBoard();
+
+        Assert.That(result.Count, Is.EqualTo(64), "Board harus memiliki 64 squares (8x8)");
     }
 
     [Test]
@@ -361,13 +369,5 @@ public class GameService_IsGameServiceShould
 
         bool result = _gameService.IsKing(piece);
         Assert.That(result, Is.False);
-    }
-
-    [Test]
-    public void FlattenBoard_ShouldReturnExactly64Squares()
-    {
-        List<Square> result = _gameService.FlattenBoard();
-
-        Assert.That(result.Count, Is.EqualTo(64), "Board harus memiliki 64 squares (8x8)");
     }
 }
