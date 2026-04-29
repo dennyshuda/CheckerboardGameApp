@@ -258,7 +258,7 @@ public class GameService_IsGameServiceShould
 
         Piece? pieceAtDestination = _board.Squares[to.Y, to.X].Piece;
         Assert.That(pieceAtDestination, Is.Not.Null);
-        Assert.That(pieceAtDestination.Role, Is.EqualTo(Role.King), "Bidak seharusnya sudah dipromosikan jadi King");
+        Assert.That(pieceAtDestination.Role, Is.EqualTo(Role.King));
     }
 
     [Test]
@@ -276,7 +276,19 @@ public class GameService_IsGameServiceShould
 
         Piece? pieceAtDestination = _board.Squares[to.Y, to.X].Piece;
         Assert.That(pieceAtDestination, Is.Not.Null);
-        Assert.That(pieceAtDestination.Role, Is.EqualTo(Role.King), "Bidak seharusnya sudah dipromosikan jadi King");
+        Assert.That(pieceAtDestination.Role, Is.EqualTo(Role.King));
+    }
+    [Test]
+
+    public void MakeMove_PieceIsDoesntExist_ReturnFailure()
+    {
+        Point from = new(x: 5, y: 6);
+        Point to = new(x: 6, y: 7);
+
+        _board.Squares[from.Y, from.X] = new Square(new Point(from.X, from.Y), null);
+
+        var response = _gameService.MakeMove(from, to);
+        Assert.That(response.IsSuccess, Is.False);
     }
 
     [Test]
@@ -300,14 +312,14 @@ public class GameService_IsGameServiceShould
     }
 
     [Test]
-    public void IsInsideBoard_Input_ReturnTrue()
+    public void IsInsideBoard_InputValidPoint_ReturnTrue()
     {
         bool result = _gameService.IsInsideBoard(3, 4);
         Assert.That(result, Is.True);
     }
 
     [Test]
-    public void IsInsideBoard_Input_ReturnFalse()
+    public void IsInsideBoard_InputInvalidPoint_ReturnFalse()
     {
         bool result = _gameService.IsInsideBoard(-1, 4);
         Assert.That(result, Is.False);
@@ -334,11 +346,28 @@ public class GameService_IsGameServiceShould
     }
 
     [Test]
-    public void IsKing_Input_ReturnFalse()
+    public void IsKing_PieceRoleIsKing_ReturnTrue()
+    {
+        Piece piece = new(Color.White, Role.King);
+
+        bool result = _gameService.IsKing(piece);
+        Assert.That(result, Is.True);
+    }
+
+    [Test]
+    public void IsKing_PieceRoleIsNotKing_ReturnFalse()
     {
         Piece piece = new(Color.White, Role.Troop);
 
         bool result = _gameService.IsKing(piece);
         Assert.That(result, Is.False);
+    }
+
+    [Test]
+    public void FlattenBoard_ShouldReturnExactly64Squares()
+    {
+        List<Square> result = _gameService.FlattenBoard();
+
+        Assert.That(result.Count, Is.EqualTo(64), "Board harus memiliki 64 squares (8x8)");
     }
 }
