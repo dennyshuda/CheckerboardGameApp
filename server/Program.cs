@@ -2,7 +2,7 @@ using CheckerboardGameApp.Factories;
 using CheckerboardGameApp.Interfaces;
 using Serilog;
 using Serilog.Events;
-using Serilog.Formatting.Compact;
+using Serilog.Formatting.Json;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,7 +42,7 @@ builder.Host.UseSerilog((context, services, configuration) => configuration
         retainedFileCountLimit: 30,
         shared: true,
         flushToDiskInterval: TimeSpan.FromSeconds(1))
-    .WriteTo.File(new CompactJsonFormatter(), "logs/application-json-.log",
+    .WriteTo.File(new JsonFormatter(), "logs/application-json-.log",
         rollingInterval: RollingInterval.Day,
         retainedFileCountLimit: 30));
 
