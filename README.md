@@ -71,3 +71,24 @@ Open browser and access `http://localhost:5173`.
 | `POST` | `/api/v1/game/move`       | Sends a pawn move (from coordinate A to B).          |
 | `POST` | `/api/v1/game/reset`      | Reset the board to its starting position.            |
 | `POST` | `/api/v1/game/setup-demo` | Set up the board for demonstration/testing purposes. |
+
+iot
+meetig roomm tanpa booking problem
+gbs dibooking
+
+solusi checkin
+pk sensor
+ada radar deteksi sekitar
+
+ide lain cctv
+
+MVP: paralel rasbery da iot gteway jalan kalo bisa ui
+
+1. bikin endpoint
+2. baru hardware
+3. logic gateway
+
+consider db
+
+https://www.hlktech.net/index.php?id=download-center&cate=cate-63fdaeb91b37b&pageid=2
+https://drive.google.com/drive/folders/16zI-fium_BZeP08EyQke0rWp0BJTMvw3
