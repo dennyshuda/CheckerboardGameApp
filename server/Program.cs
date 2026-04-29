@@ -2,6 +2,7 @@ using CheckerboardGameApp.Factories;
 using CheckerboardGameApp.Interfaces;
 using Serilog;
 using Serilog.Events;
+using Serilog.Formatting.Compact;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +21,7 @@ builder.Services.AddSingleton<IGameService>(sp =>
     var factory = sp.GetRequiredService<GameFactory>();
     return factory.CreateGame();
 });
+
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
@@ -28,7 +30,22 @@ Log.Logger = new LoggerConfiguration()
     .WriteTo.File("logs/game-log-.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
-builder.Host.UseSerilog();
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .ReadFrom.Services(services)
+    .Enrich.FromLogContext()
+    .Enrich.WithEnvironmentName()
+    .Enrich.WithMachineName()
+    .WriteTo.Console()
+    .WriteTo.File("logs/application-.log",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30,
+        shared: true,
+        flushToDiskInterval: TimeSpan.FromSeconds(1))
+    .WriteTo.File(new CompactJsonFormatter(), "logs/application-json-.log",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30));
+
 
 builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
