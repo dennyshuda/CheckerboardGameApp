@@ -116,6 +116,7 @@ public class GameService : IGameService
 
     public List<MoveOption> GetValidMove(Point from)
     {
+        _logger.LogInformation($"Validasi gerakan untuk titik: {from}");
         List<MoveOption> validMoves = [];
         Piece? piece = Board.Squares[from.Y, from.X].Piece;
 
@@ -146,6 +147,7 @@ public class GameService : IGameService
 
     private void AddValidNormalMove(List<MoveOption> list, int targetX, int targetY)
     {
+        _logger.LogInformation($"Memeriksa gerakan normal ke: ({targetX}, {targetY})");
         if (IsInsideBoard(targetX, targetY))
         {
             if (Board.Squares[targetY, targetX].Piece == null)
@@ -157,6 +159,7 @@ public class GameService : IGameService
 
     private void AddValidCaptureMove(List<MoveOption> list, Point from, int colDirection, int rowDirection, Color color)
     {
+        _logger.LogInformation($"Memeriksa gerakan capture ke arah: ({colDirection}, {rowDirection})");
         int enemyX = from.X + colDirection;
         int enemyY = from.Y + rowDirection;
         int targetX = from.X + (colDirection * 2);
@@ -182,6 +185,7 @@ public class GameService : IGameService
 
     private void SwitchTurn()
     {
+        _logger.LogInformation($"Beralih ke pemain: {(CurrentPlayerColor == Color.White ? "Hitam" : "Putih")}");
         CurrentPlayerColor = (CurrentPlayerColor == Color.White) ? Color.Black : Color.White;
     }
 
